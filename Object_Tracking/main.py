@@ -5,7 +5,7 @@ from ultralytics import YOLO
 from djitellopy import Tello
 
 # YOLOv10 모델 로드 (best.pt)
-model = YOLO("../models/best.pt")  # best.pt 경로 확인
+model = YOLO("../models/best3.pt")  # best.pt 경로 확인
 
 #Tello 드론 연결
 tello = Tello()
