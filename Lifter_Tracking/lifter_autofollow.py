@@ -4,12 +4,30 @@ from ultralytics import YOLO
 import threading
 import queue
 import time
+import logging
+from logging.handlers import QueueHandler, QueueListener
 
-model = YOLO("C:/Users/Administrator/Desktop/TelloDrone/models/best.pt")
+# Logging Setup 
+log_queue = queue.Queue(-1)
+console_handler = logging.StreamHandler()
+file_handler = logging.FileHandler("drone.log", mode='a')
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 
+console_handler.setFormatter(formatter)
+file_handler.setFormatter(formatter)
+queue_handler = QueueHandler(log_queue)
+listener = QueueListener(log_queue, console_handler, file_handler)
+
+logger = logging.getLogger("DroneLogger")
+logger.setLevel(logging.INFO)
+logger.addHandler(queue_handler)
+listener.start()
+
+# Model and Drone Setup
+model = YOLO("C:/Users/Administrator/Desktop/Drone_Project/models/best4.pt")
 tello = Tello()
 tello.connect()
-print("배터리:", tello.get_battery())
+logger.info(f"배터리: {tello.get_battery()}%")
 tello.streamon()
 
 frame_read = tello.get_frame_read()
@@ -24,53 +42,58 @@ TARGET_LABEL = "lifter"
 MIN_BOX_HEIGHT = 120
 MAX_BOX_HEIGHT = 180
 
-frame_queue = queue.LifoQueue(maxsize=10)
+frame_queue = queue.Queue(maxsize=10)
 
-# ⏱️ IO 및 추론 프레임 속도 측정용
+# Thread FPS Counters
 io_counter = 0
 infer_counter = 0
 last_io_time = time.time()
 last_infer_time = time.time()
 
+# Frame Fetch Thread
 def fetch_frames():
     global io_counter, last_io_time
     while True:
         frame = frame_read.frame
         frame = cv2.resize(frame, (FRAME_WIDTH, FRAME_HEIGHT))
-        if frame_queue.full():
-            frame_queue.get()
-        frame_queue.put(frame)
+
+        try:
+            frame_queue.put_nowait(frame)
+        except queue.Full:
+            try:
+                frame_queue.get_nowait()
+                frame_queue.put_nowait(frame)
+            except queue.Empty:
+                pass
 
         io_counter += 1
-        current_time = time.time()
-        if current_time - last_io_time >= 1.0:
-            print(f"[📥 IO FPS] {io_counter} fps")
+        if time.time() - last_io_time >= 1.0:
+            logger.info(f"[IO FPS] {io_counter} fps")
             io_counter = 0
-            last_io_time = current_time
+            last_io_time = time.time()
 
         time.sleep(0.01)
 
+# Detection Thread
 def process_frames():
     global infer_counter, last_infer_time
     while True:
         if not frame_queue.empty():
             frame = frame_queue.get()
-            infer_start = time.time()
             results = model(frame, verbose=False)[0]
-            infer_end = time.time()
 
             infer_counter += 1
-            if infer_end - last_infer_time >= 1.0:
-                print(f"[🧠 Inference FPS] {infer_counter} fps")
+            if time.time() - last_infer_time >= 1.0:
+                logger.info(f"[Inference FPS] {infer_counter} fps")
                 infer_counter = 0
-                last_infer_time = infer_end
+                last_infer_time = time.time()
 
             yaw_velocity = 0
             up_down_velocity = 0
             forward_backward_velocity = 0
             target_found = False
 
-            print(f"[🧠 탐지결과] 박스 {len(results.boxes)}개")
+            logger.info(f"[탐지결과] 박스 {len(results.boxes)}개")
 
             for result in results.boxes.data.tolist():
                 x1, y1, x2, y2, conf, cls = result
@@ -80,8 +103,7 @@ def process_frames():
                 label_text = f"{label} ({confidence:.2f})"
                 box_coords = f"({int(x1)}, {int(y1)}) ~ ({int(x2)}, {int(y2)})"
 
-                # 콘솔 출력
-                print(f"[🧠 탐지결과] {label} | 정확도: {confidence:.2f} | 바운딩박스: {box_coords}")
+                logger.info(f"[탐지결과] {label} | 정확도: {confidence:.2f} | 바운딩박스: {box_coords}")
 
                 if label == TARGET_LABEL:
                     target_found = True
@@ -112,17 +134,19 @@ def process_frames():
                     else:
                         forward_backward_velocity = 0
 
-                    print(f"[🎯 타겟 탐지] {label} @ ({cx}, {cy}) / 높이: {box_height}")
+                    logger.info(f"[타겟 탐지] {label} @ ({cx}, {cy}) / 높이: {box_height}")
                     break
 
-
             if not target_found:
-                print("리프터 못 찾음")
+                logger.info("리프터 탐지 실패")
                 yaw_velocity = 0
                 up_down_velocity = 0
                 forward_backward_velocity = 0
 
-            tello.send_rc_control(0, forward_backward_velocity, up_down_velocity, yaw_velocity)
+            try:
+                tello.send_rc_control(0, forward_backward_velocity, up_down_velocity, yaw_velocity)
+            except Exception as e:
+                logger.warning(f"[명령 전송 오류] {e}")
 
             cv2.imshow("📷 Tello Camera", frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -133,13 +157,24 @@ def process_frames():
     tello.streamoff()
     cv2.destroyAllWindows()
 
-# 이륙
-tello.takeoff()
-time.sleep(2)
+# Main Start
+try:
+    tello.takeoff()
+    time.sleep(2)
 
-fetch_thread = threading.Thread(target=fetch_frames, daemon=True)
-process_thread = threading.Thread(target=process_frames)
+    fetch_thread = threading.Thread(target=fetch_frames, daemon=True)
+    process_thread = threading.Thread(target=process_frames)
 
-fetch_thread.start()
-process_thread.start()
-process_thread.join()
+    fetch_thread.start()
+    process_thread.start()
+    process_thread.join()
+
+except KeyboardInterrupt:
+    logger.info("Ctrl+C에 의한 종료 요청 감지됨")
+    tello.send_rc_control(0, 0, 0, 0)
+    tello.land()
+    tello.streamoff()
+    cv2.destroyAllWindows()
+    listener.stop()
+    logger.info("모든 리소스 종료 완료")
+    exit(0)

@@ -4,7 +4,7 @@ from ultralytics import YOLO
 import time
 
 # 모델 로드
-model = YOLO("C:/Users/Administrator/Desktop/TelloDrone/models/best.pt")  # 리프터, 사람 분류
+model = YOLO("./models/best4.pt")  # 리프터, 사람 분류
 
 # 드론 초기화
 tello = Tello()
