@@ -18,6 +18,7 @@ try:
     while True:
         frame = frame_read.frame
         frame = cv2.resize(frame, (640, 480))
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
         # 4. YOLO에 프레임 전달하여 추론
         results = model(frame)[0]  # 첫 번째 결과만 사용

@@ -19,7 +19,7 @@ FRAME_WIDTH = 640
 while True:
     frame = tello.get_frame_read().frame
     frame = cv2.resize(frame, (FRAME_WIDTH, 480))
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    
     results = model(frame, verbose=False)[0]
     
     target_found = False
