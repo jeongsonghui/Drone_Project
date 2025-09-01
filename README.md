@@ -35,7 +35,9 @@
   | **Recall** | 0.7519 |  
   | **mAP@50** | 0.7543 |  
   | **mAP@50-95** | 0.5704 |  
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/c5f9845e-d1e3-4a01-a558-8461da914d91" />
 
+<img width="1786" height="906" alt="스크린샷 2025-09-02 012330" src="https://github.com/user-attachments/assets/313afb86-0bb9-4a56-8dac-03ea17abe36a" />
 
 
 
