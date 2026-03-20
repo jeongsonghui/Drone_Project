@@ -45,8 +45,16 @@
    
 ## 파일구조
 ```
-📦Basic_Connection : 기본 드론 비행 코드
-📦drone_education : 드론 교육 실습 코드  
-📦Lifter_Tracking : 객체 추적 모델을 드론에 적용한 코드
-📦models : 사용하는 모델들
+📦 Basic_Connection  
+ ┗ 기본 드론 비행 코드  
+
+📦 drone_education  
+ ┗ 드론 교육 실습 코드  
+
+📦 Lifter_Tracking  
+ ┗ 객체 추적 모델을 드론에 적용한 코드  
+    ┗ 📄 lifter_autofollow.py  
+       ┗ 리프터 및 사람을 감지하고, 리프터를 자동으로 추적하여 화면 중앙에 유지
+📦 models   
+ ┗ 사용하는 모델들
    
