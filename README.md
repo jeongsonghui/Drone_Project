@@ -39,6 +39,34 @@
 
 <img width="1786" height="906" alt="스크린샷 2025-09-02 012330" src="https://github.com/user-attachments/assets/313afb86-0bb9-4a56-8dac-03ea17abe36a" />
 
+### 3️⃣: Lifter Tracking 자율주행 드론 성능
+📌 **실행 환경**
+- 드론: Tello Robomaster  
+- 모델: YOLO v10 + DeepSORT 
+- 입력 해상도: 480 × 640  
+- 개발 언어/프레임워크: Python, PyTorch 
+
+📊 **성능 결과**
+| 항목 | 값 |
+|------|------|
+| IO FPS | 79 fps |
+| Inference FPS | 7 fps |
+| 평균 정확도 | 0.56 (Lifter) |
+
+🎯 **객체 탐지 및 추적**
+- 탐지 대상: Lifter, 사람  
+- 탐지 결과 기반 객체 위치 추적 수행  
+- 화면 중앙 유지 + 위험 요소(리프터) 감지 시 경고 발생  
+
+🚁 **제어 동작**
+- 드론은 탐지된 객체 중심 좌표 기반으로 실시간 이동 제어 (`rc` 명령어 활용)  
+- 로그 기록: 매 프레임 FPS, 탐지 결과, 타겟 좌표 등  
+
+⚡ **개선 사항**
+- LifoQueue를 사용하여 항상 최신 프레임만 추론하도록 구조 개선  
+- Queue가 가득 찰 경우 이전 프레임 제거 전략 적용 → 지연(latency) 누적 방지  
+- 초기 FPS: 3 → 최적화 후 Inference FPS 7로 실시간에 가까운 처리 가능  
+- 안정적인 객체 추적 및 경고 시스템 구현
 
 
 
@@ -57,4 +85,16 @@
        ┗ 리프터 및 사람을 감지하고, 리프터를 자동으로 추적하여 화면 중앙에 유지
 📦 models   
  ┗ 사용하는 모델들
-   
+```
+
+## 실행방법
+
+1. DJI Tello RoboMaster 드론 전원 ON  
+2. PC에서 드론 Wi-Fi에 연결  
+3. 프로젝트 루트 디렉토리에서 아래 명령어 실행  
+
+```bash
+cd Lifter_Tracking
+python lifter_autofollow.py
+
+
