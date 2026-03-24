@@ -79,12 +79,22 @@
 📦 drone_education  
  ┗ 드론 교육 실습 코드  
 
+📦 Experiment/ 
+ ┗ OSL 등 다양한 방법으로 모델 실험 및 자율 주행 경로(Shortest_path) 테스트
+
+📦 Images
+ ┗ 리프터와 어두운 곳에서의 사람 이미지 데이터셋
+
 📦 Lifter_Tracking  
  ┗ 객체 추적 모델을 드론에 적용한 코드  
     ┗ 📄 lifter_autofollow.py  
        ┗ 리프터 및 사람을 감지하고, 리프터를 자동으로 추적하여 화면 중앙에 유지
 📦 models   
- ┗ 사용하는 모델들
+ ┗ 학습된 모델들
+
+📦 YOLO10_finetuning(drone).ipynb  
+ ┗ YOLOv10 파인튜닝 및 학습 과정 노트북 
+
 ```
 
 ## 실행방법
@@ -97,4 +107,15 @@
 cd Lifter_Tracking
 python lifter_autofollow.py
 
+```
+
+### 4️⃣ Extension: Drone Coding Education
+
+본 프로젝트를 기반으로, 드론 제어 및 AI 모델 활용을 학습할 수 있는 **드론 코딩 교육 자료**를 제작했습니다.
+
+### 🎯 목적
+- 파이썬이 가능한 중고등학생들을 대상으로 ML, 컴퓨터 비전의 이해와 드론을 조작하는 코딩법을 익히게 하기 위함.
+
+### 📖 내용 구성
+- 드론에 대한 소개, 코딩을 통한 간단 조작법, CV 모델 학습, 모델을 드론에 적용시키기 
 
