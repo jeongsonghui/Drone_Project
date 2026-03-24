@@ -97,6 +97,12 @@
 
 ```
 
+---
+
+📓 **Notebook**
+
+- 🔍 [nbviewer로 보기](https://nbviewer.org/github/jeongsonghui/Drone_Project/blob/main/YOLO10_finetuning(drone).ipynb)
+
 ## 실행방법
 
 1. DJI Tello RoboMaster 드론 전원 ON  
